@@ -1,38 +1,58 @@
-.App {
-  text-align: center;
+
+:root{
+  --blue1: #4285F4;
+  --blue2: #5a95f5
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
+.app{
+  align-items: center;
+  background-color: white;
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
+  padding-top: 15em;
+  gap: 1em;
+}
+.header {
+  display: flex;
+  flex-direction: row;
+  position: absolute;
+
+  gap: 1em;
+  padding: 2em;
+}
+
+.GitHub-Link{
+  color: inherit;
+  text-decoration: none;
+}
+
+.GitHub-Link:hover{
+  color: var(--blue1);
+}
+
+.error-text{
+  font-size: 11px;
+  color: red;
+}
+
+.recording-button{
+  height: 4.5em;
+  width: 8em;
+  padding: 5px 10px 10px 5px;
+  background-color:var(--blue1);
   color: white;
+  border: none;
 }
-
-.App-link {
-  color: #61dafb;
+.recording{
+  height: 4.5em;
+  width: 8em;
+  padding: 5px 10px 10px 5px;
+  color: white;
+  border: none;
+  background-color: red;
 }
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.recording-button:hover {
+  background-color: var(--blue2);
 }

@@ -1,6 +1,8 @@
 {
   "dependencies": {
     "express": "^4.21.0",
-    "nodemon": "^3.1.7"
+    "fft.js": "^4.0.4",
+    "nodemon": "^3.1.7",
+    "ws": "^8.18.0"
   }
 }
