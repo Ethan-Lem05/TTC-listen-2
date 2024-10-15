@@ -1,108 +1,113 @@
 import './App.css';
 import useAudio from './hooks/mediaDevice';
-import React, {useState, createContext, useEffect} from "react"
-import AudioProcessor from 'AudioProcessor'
+import React, { useState, useEffect } from 'react';
 
-const GlobalContext = createContext();
-const serverPort = 'ws://localhost:5000'
+const serverPort = 'ws://localhost:5000';
+
+function encodeJSON (json) {
+    const jsonString = JSON.stringify(json);
+    const encoder = new TextEncoder();
+    return encoder.encode(jsonString);
+}
 
 function App() {
-  //states
-  const [isRecording, setIsRecording] = useState(false); 
+  const [isRecording, setIsRecording] = useState(false);
   const [audioStream, audioError] = useAudio(isRecording);
-  const [socket, setSocket] = useState(null)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState(null);
+  const [ws, setWS] = useState(null); // Properly initialize WebSocket state
+  const [recorder, setRecorder] = useState(null); // Store the MediaRecorder instance
 
-  //event listeners
-  function startRecording() {
-    setIsRecording(!isRecording)
-   }
-
-  // use effects 
-
-  //open socket on recording
+  // Effect hook to initialize recording when audioStream is available
   useEffect(() => {
-    if (!isRecording) return;
+    if (audioStream && isRecording) {
+      initializeRecording();
+    }
+  }, [audioStream, isRecording]);
 
-    const ws = new WebSocket(serverPort);
+  const initializeRecording = () => {
+    if (audioStream) {
+      const mediaRecorder = new MediaRecorder(audioStream);
 
-    ws.onopen = () => {
+      mediaRecorder.ondataavailable = (event) => {
+        console.log("sending data...")
+        if (event.data.size > 0 && ws && ws.readyState === WebSocket.OPEN) {
+            const test = { type: "test", data: "hello" };
+            
+            ws.send(encodeJSON(test)); // Send audio data to WebSocket server
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        setIsRecording(false);
+      };
+
+      setRecorder(mediaRecorder);
+      mediaRecorder.start(1000); // Start recording with 1-second chunks
+    }
+  };
+
+  const createWSConn = () => {
+    const socket = new WebSocket(serverPort);
+
+    socket.onopen = () => {
       console.log('WebSocket connection opened');
-      setSocket(ws);
     };
 
-    ws.onmessage = (event) => {
+    socket.onmessage = (event) => {
       console.log('Message from server:', event.data);
     };
 
-    ws.onclose = () => {
+    socket.onclose = () => {
       console.log('WebSocket connection closed');
-      setSocket(null);
     };
 
-    ws.onerror = (error) => {
-      setError(error);
+    socket.onerror = (error) => {
+      setError(error.message);
     };
 
-    // Clean up the WebSocket connection when the component unmounts
-    return () => {
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.close();
-      }
-    };
-
-  }, [isRecording]);
-
-  useEffect( async () => {
-    //demorgans law
-    if(!(isRecording && audioStream && socket)) {
-      return
-    }
-
-    let audioContext = new AudioContext();
-    await audioContext.audioWorklet.addModule('AudioProcessor.js');
-
-    let source = audioContext.createMediaStreamSource(stream);
-    let node = AudioWorkletNode(audioContext, 'AudioProcessor', {
-      processorOptions: {
-        sampleRate: audioContext.sampleRate,
-        bufferSize: 1024
-      }
-    })
-    
-    source.connect(node)
-
-    // Listen for messages from the audio worklet processor
-    workletNode.port.onmessage = (event) => {
-      console.log('Message from worklet:', event.data);
+    setWS(socket);
   };
 
-    // Send a message to the audio worklet processor
-    workletNode.port.postMessage({ type: 'initialize', text: 'initializing port...' });
-    //send a message to the thread with the websocket attached 
-    workletNode.port.postMessage({type: 'websocket-open', socket: socket})
+  const handleStartRecording = () => {
+    createWSConn(); // Establish WebSocket connection before starting the recording
+    setIsRecording(true); // Trigger audio stream request through the useAudio hook
+  };
 
-  }, [isRecording, audioStream, socket])
+  const handleStopRecording = () => {
+    if (recorder && recorder.state !== 'inactive') {
+      recorder.stop(); // Stop the MediaRecorder if it's recording
+    }
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.close(); // Close WebSocket connection if open
+    }
+    setIsRecording(false);
+  };
 
-  //set error
-  useEffect(() => {
-    setError (audioError)
-  }, [audioError])
+  // Handle audio errors
+  if (audioError) {
+    setError(audioError.message);
+  }
 
   return (
-    <GlobalContext.Provider value={{isRecording, setIsRecording}}>
+    <div>
       <div className="header">
         <h2>By Ethan Lem</h2>
         <h2 className="GitHub-Link"><a href=""> GitHub </a></h2>
       </div>
       <div className="app">
-        <h1 id="header"> TTC Listen </h1>
-        <h2 id="explanation"> Click here to start recording...  </h2>
-        <button id="recording-button" className={ !isRecording ? "recording-button" : "recording"} onClick={startRecording}> Start Recording </button>
-        <p id="error-text" className="error-text"> {error} </p>
+        <h1 id="header">TTC Listen</h1>
+        <h2 id="explanation">Click here to start recording...</h2>
+        <button
+          id="recording-button"
+          className={!isRecording ? "recording-button" : "recording"}
+          onClick={isRecording ? handleStopRecording : handleStartRecording}
+        >
+          {isRecording ? "Stop Recording" : "Start Recording"}
+        </button>
+        {error && <p id="error-text" className="error-text">{error}</p>}
       </div>
-    </GlobalContext.Provider>
-  )
+    </div>
+  );
 }
 
 export default App;

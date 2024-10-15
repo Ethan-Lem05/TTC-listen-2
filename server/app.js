@@ -1,11 +1,10 @@
 const express = require("express");
 const http = require("http");
 const WebSocket = require("ws");
-const sftf = require("./sftf.js");
+const { decodeJSON } = require("./middleware.js");
 
 const app = express();
 const port = 5000;
-const sftf = new sftf(1024,512)
 
 // Create an HTTP server from the Express app
 const server = http.createServer(app);
@@ -18,14 +17,24 @@ app.get('/', (req, res) => {
 });
 
 wss.on('connection', (ws) => {
-    ws.on('message', (message) => {
-        let type = message.type
+    console.log("client connected");
 
-        switch(type) {
-            case type === "audio-segment":
-                sftf.process(message.data)
-            case type === "test":
-                console.log(message.data)
+    ws.on('message', (message) => {
+        // Parse the message if it's a string
+
+        const { type, data } = decodeJSON(message);
+
+        switch (type) {
+            case "audio-segment":
+                // Process the audio data
+                console.log("Received audio segment");
+                // sftf.process(data); // Uncomment and implement this function
+                break;
+            case "test":
+                console.log(data);
+                break;
+            default:
+                console.warn("Unknown message type:", type);
         }
     });
 
