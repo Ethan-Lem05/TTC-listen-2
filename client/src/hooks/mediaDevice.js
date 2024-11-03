@@ -7,7 +7,9 @@ function useAudio(recording) {
     useEffect(() => {
         const setUpDevice = async () => {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: {
+                    channelCount: 1,
+                }});
                 setAudioStream(stream);
             } catch (err) {
                 console.error("Error accessing audio devices:", err);
