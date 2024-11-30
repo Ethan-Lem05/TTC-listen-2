@@ -61,6 +61,15 @@ const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
 /***********  helper functions  ********/
+const setUpModelInput = () => {
+    const output = new WritableStream({
+        write(chunk) {
+            console.log(chunk);
+        }
+    });
+
+    return output;
+}
 
 const setUpConversionPipeline = (ws, output) => {
     //create PCM buffer and overflow container
@@ -69,33 +78,25 @@ const setUpConversionPipeline = (ws, output) => {
     const overflow = []
 
     const handleFreqConversion = (chunk) => {
-        // Convert the chunk to a bit string
-        // let bitString = Array.from(new Uint8Array(chunk))
-        // .map(byte => byte.toString(2).padStart(8, '0'))
-        // .join('');
-   
-        // Write the bit string to a file
-        // fs.write('./output.txt', bitString, (err) => {
-        //     if (err) throw err;
-        //     console.log('File written successfully');
-        // });
-       
-        //implement a circular buffer to ensure consistent window size 
-        // let chunkList = Array.from(new Uint8Array(chunk));
-        // overflow.push(...chunkList);
+        if (!chunk || !(chunk instanceof Uint8Array) ) {
+            console.log("Error: chunk not in right format")
+            return;
+        }
+        //add the chunk to the overflow buffer
+        overflow.push(...chunk);
        
         //ensure that the overflow isn't less than the current buffer size 
-        // if(overflow.length() > pcmBufferSize) {
-        //     pcmBuffer.set(overflow.slice(0,pcmBufferSize))
-        //     overflow.splice(0, pcmBufferSize);
-        // } 
+        if(overflow.length() > pcmBufferSize) {
+            pcmBuffer.set(overflow.slice(0,pcmBufferSize))
+            overflow.splice(0, pcmBufferSize);
+        } 
    
         //convert the pcmBuffer in binary to pcmBuffer in 32 bit floating point numbers 
-        // const pcmInts = []
-        // for(let i = 0; i < pcmBuffer.length-8; i += 8) {
-        //     let binaryNum = pcmBuffer.slice(i,i+8)
-        //     let num = parse(0,8)
-        // }
+        const pcmInts = []
+        for(let i = 0; i < pcmBuffer.length-8; i += 8) {
+            let binaryNum = pcmBuffer.slice(i,i+8)
+            let num = parse(0,8)
+        }
    
         //perform a STFT using a buffer of previous data and current data 
         //import model to analyze incoming data
@@ -109,7 +110,6 @@ const setUpConversionPipeline = (ws, output) => {
     const conversion = ffmpeg(webMWriteStream)
     .inputFormat('webm')
     .audioCodec('pcm_u8')
-    .format('wav')
     .on('error', (err) => {
         console.error('Error processing audio:', err);
         ws.send(JSON.stringify({ error: "Error processing audio" }));
@@ -119,10 +119,10 @@ const setUpConversionPipeline = (ws, output) => {
     });
 
     conversion.pipe(output)
-    .on('data', handleFreqConversion)
-    .on('end', () => {
-        console.log("WebM PCM conversion pipe closed.")
-    });
+        .on('data', handleFreqConversion)
+        .on('end', () => {
+            console.log("WebM PCM conversion pipe closed.");
+        });
 
     conversion.on('end', () => {
         console.log('Conversion completed');
@@ -188,7 +188,7 @@ function handleMessage(ws, message, converter) {
 wss.on('connection', (ws) => {
     console.log("client connected");
     //set up conversion pipeline
-    const output = fs.createWriteStream('./output.wav');
+    const setUpModelInput = new WritableStream();
     const converter = setUpConversionPipeline(ws, output);
 
     ws.on('message', (message) => handleMessage(ws, message, converter));
