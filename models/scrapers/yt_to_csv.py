@@ -14,7 +14,7 @@ def get_video_urls(playlist_url):
         video_urls = [f"{elem.get_attribute('href')}" for elem in video_elements]
 
         # Save URLs to a file
-        with open('video_urls.txt', 'w') as f:
+        with open('dangerous_video_urls.txt', 'w') as f:
             if len(video_urls) == 0:
                 f.write('No videos found in the playlist')
             else:
@@ -26,7 +26,7 @@ def get_video_urls(playlist_url):
         driver.quit()
 
 def run():
-    get_video_urls("https://www.youtube.com/playlist?list=PLh6ErsHV8BjiDW3yNArU9pn9DGjhid-7R")
+    get_video_urls("https://www.youtube.com/playlist?list=PLaDeBbQSkY-VtaZjbzKYfPxBVFEATwYAc")
 
 if __name__ == '__main__':
     run()

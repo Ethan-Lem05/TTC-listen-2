@@ -1,23 +1,24 @@
 import subprocess
 import csv
 
-def csv_to_audiofiles():
-    with open("./models/data/safe/video_urls.csv", newline='') as csvfile:
+def csv_to_audiofiles(input_path, output_path):
+    with open(input_path, newline='') as csvfile:
         content = csvfile.read()
         data = [line.split(',') for line in content.splitlines()]
     
     for row in data:
         url = row[0]  # Assuming each row contains a single URL
         cmd = [
-            "yt-dlp",
-            "-x",
+            r"C:\Users\2005e\Downloads\yt-dlp.exe",
+            "-x", 
+            "--ffmpeg-location", r"C:\Users\2005e\Downloads\ffmpeg-7.1-essentials_build\ffmpeg-7.1-essentials_build\bin\ffmpeg.exe",
             "--audio-format", "wav",
             "--audio-quality", "0",
-            "-o", "models/data/safe/%(title)s.%(ext)s",
+            "-o", f"{output_path}/%(title)s.%(ext)s",
             url
         ]
 
         subprocess.run(cmd)
 
 if __name__ == "__main__":
-    csv_to_audiofiles()
+    csv_to_audiofiles("dangerous_video_urls.txt","models/data/dangerous/")
