@@ -1,13 +1,4 @@
 /**
- * @fileoverview Hello to those at at Mercury! I thought that since you allow me to upload anything, I'll take sometime to show you a current project I am working on. 
- * I couldn't attach the tests so I thought I'd just share with you a part of the server code. It is a current work in progress but essentially it is a data pipeline for 
- * moving audio data through a series of processing steps in order to extract frequency data in real-time. 
- * The server is built using Node.js and Express and uses the WebSocket protocol to communicate with clients. 
- * The server receives audio data from the client, and then processes the data using the fluent-ffmpeg library to convert the audio data from WebM format to PCM format.
- * I am currently training an LSTM AI model in PyTorch that will be able to take the frequency data and identify hostile language and violence. 
- * This project is used for listening in on conversations in public spaces and alerting authorities when it detects a threat,
- * especially on subway systems where violence is quite prevalent where I live here in Toronto.
- * 
  * @requires express
  * @requires http
  * @requires ws
@@ -98,9 +89,8 @@ const setUpConversionPipeline = (ws, output) => {
             let num = parse(0,8)
         }
    
-        //perform a STFT using a buffer of previous data and current data 
-        //import model to analyze incoming data
-        // No need to return the chunk here
+        //make use of Wav2Vec to convert to embeddings 
+        //use the embeddings to make predictions with pretrained LSTM model
         return chunk;
     }
 
