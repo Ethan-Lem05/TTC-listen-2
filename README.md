@@ -19,4 +19,6 @@ Next there is a server that recieves the streamed data and processes it using an
 
 This FFT algorithm was then deemed as unnecessary since I made use of an audio embedding model to better capture semantic meaning in my dataset. I noticed that my loss while training was not converging as I had hoped. So instead I made use of Wav2Vec, an audio embedding AI in Python which was good at converting speech data in noisy environments to vector data I could use with my AI model, and proved to be pretty good at generating data for my specific task. 
 
+Most recently, i have once again modified the arcitecture to make use of VGGish, a convolutional neural network for short audio clip embedding. This model, while slighlty less performant, seems to be much faster with marginal losses in terms of accuracy (log-loss). Thus, for real-time application, VGGish was the perfect model so i will be moving forward with this model and running a full training process on my entire datasetz
+
 
